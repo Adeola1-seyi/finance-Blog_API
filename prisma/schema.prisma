@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider ="mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String       @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  comments  Comment[]
+  likes     Like[]
+}
+
+model Blog {
+  id             String       @id @default(uuid())
+  title          String
+  description    String
+  coverImageUrl  String?   @map("cover_image_url")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  posts          Post[]
+}
+
+model Post {
+  id             String       @id @default(uuid())
+  blogId         String       @map("blog_id")
+  title          String
+  content        String
+  coverImageUrl  String?   @map("cover_image_url")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  blog           Blog      @relation(fields: [blogId], references: [id])
+  comments       Comment[]
+  likes          Like[]
+}
+
+model Comment {
+  id         String       @id @default(uuid())
+  userId     String       @map("user_id")
+  postId     String       @map("post_id")
+  content    String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user       User      @relation(fields: [userId], references: [id])
+  post       Post      @relation(fields: [postId], references: [id])
+}
+
+model Like {
+  id         String       @id @default(uuid())
+  userId     String       @map("user_id")
+  postId     String       @map("post_id")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user       User      @relation(fields: [userId], references: [id])
+  post       Post      @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId]) 
+}
