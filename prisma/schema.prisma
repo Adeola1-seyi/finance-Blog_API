@@ -14,6 +14,11 @@ model User {
   password  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  DeletedAt DateTime? @map("deleted_at")
+
+  isAdmin   Boolean   @default(false) @map("is_admin")
+  posts     Post[]  
 
   comments  Comment[]
   likes     Like[]
@@ -33,6 +38,7 @@ model Blog {
 model Post {
   id             String       @id @default(uuid())
   blogId         String       @map("blog_id")
+  userId         String       @map("user_id")
   title          String
   content        String
   coverImageUrl  String?   @map("cover_image_url")
@@ -40,6 +46,7 @@ model Post {
   updatedAt      DateTime  @updatedAt
 
   blog           Blog      @relation(fields: [blogId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
   comments       Comment[]
   likes          Like[]
 }
