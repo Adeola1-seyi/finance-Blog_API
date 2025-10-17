@@ -11,6 +11,13 @@ export const likePost = async (req, res, next) => {
         user: { connect: { id: userId } },
       },
     });
+    const likeCount = await prisma.like.count({
+      where: { postId },
+    });
+    await prisma.post.update({
+      where: { id: postId },
+      data: { likeCount },
+    });
     res.status(201).json({ like });
   } catch (error) {
     next(new AppError(500, 'Failed to like post', { error }));
