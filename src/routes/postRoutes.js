@@ -10,9 +10,11 @@ import { authenticateUserToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Public routes
 router.get('/', getAllPosts);
 router.get('/:id', getPost);
 
+// Protected routes
 router.use(authenticateUserToken);
 
 router.post('/blog/:blogId', createPost);

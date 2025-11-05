@@ -13,11 +13,13 @@ import { authenticateUserToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Public routes
 router.get('/', getAllComments);
 router.get('/post/:postId', getCommentsForPost);
 router.get('/post/:postId/count', getCommentCountForPost);
 router.get('/:commentId/replies', getRepliesForComment);
 
+// Protected routes
 router.use(authenticateUserToken);
 
 router.post('/post/:postId', addCommentToPost);

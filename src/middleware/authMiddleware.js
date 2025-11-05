@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma/index.js';
-import { AppError } from '../utils/error.js';
+import { AppError } from '..src/utils/error.js';
 
 const User = prisma.user;
 const jwtSecret = process.env.JWT_SECRET;
@@ -25,20 +25,22 @@ export const authenticateUserToken = async (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
 
-  try {
-    const decoded = jwt.verify(token, jwtSecret);
+  if (!jwtSecret) {
+  return next(new AppError(500, 'JWT secret not configured'));
+}
 
-    const user = await User.findUnique({
-      where: { id: decoded.id },
-    });
+try {
+  const decoded = jwt.verify(token, jwtSecret);
+  const user = await User.findUnique({ where: { id: decoded.id } });
 
-    if (!user) {
-      return next(new AppError(404, 'User not found'));
-    }
+  if (!user) return next(new AppError(404, 'User not found'));
 
-    req.user = user;
-    next();
-  } catch (err) {
-    return next(new AppError(403, 'Invalid or Expired Token'));
+  req.user = user;
+  next();
+} catch (err) {
+  if (err.name === 'TokenExpiredError') {
+    return next(new AppError(401, 'Token expired'));
   }
+  return next(new AppError(403, 'Invalid token'));
+}
 };

@@ -3,75 +3,78 @@ generator client {
 }
 
 datasource db {
-  provider ="mysql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String       @id @default(uuid())
-  name      String
-  email     String    @unique
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  isDeleted Boolean   @default(false) @map("is_deleted")
-  DeletedAt DateTime? @map("deleted_at")
+  id         String     @id @default(uuid())
+  name       String
+  email      String     @unique
+  password   String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  isDeleted  Boolean    @default(false) @map("is_deleted")
+  deletedAt  DateTime?  @map("deleted_at")
+  isAdmin    Boolean    @default(false) @map("is_admin")
 
-  isAdmin   Boolean   @default(false) @map("is_admin")
-  posts     Post[]  
-
-  comments  Comment[]
-  likes     Like[]
+  posts      Post[]
+  comments   Comment[]
+  likes      Like[]
 }
 
 model Blog {
-  id             String       @id @default(uuid())
+  id             String     @id @default(uuid())
   title          String
   description    String
-  coverImageUrl  String?   @map("cover_image_url")
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  coverImageUrl  String?    @map("cover_image_url")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   posts          Post[]
 }
 
 model Post {
-  id             String       @id @default(uuid())
-  blogId         String       @map("blog_id")
-  userId         String       @map("user_id")
+  id             String      @id @default(uuid())
+  blogId         String      @map("blog_id")
+  userId         String      @map("user_id")
   title          String
   content        String
-  coverImageUrl  String?   @map("cover_image_url")
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  coverImageUrl  String?     @map("cover_image_url")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  likeCount      Int         @default(0) @map("like_count")
 
-  blog           Blog      @relation(fields: [blogId], references: [id])
-  user           User      @relation(fields: [userId], references: [id])
+  blog           Blog        @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments       Comment[]
   likes          Like[]
 }
 
 model Comment {
-  id         String       @id @default(uuid())
-  userId     String       @map("user_id")
-  postId     String       @map("post_id")
-  content    String
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id               String      @id @default(uuid())
+  userId           String      @map("user_id")
+  postId           String      @map("post_id")
+  parentCommentId  String?     @map("parent_comment_id")
+  content          String
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
-  user       User      @relation(fields: [userId], references: [id])
-  post       Post      @relation(fields: [postId], references: [id])
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post             Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentComment    Comment?    @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies          Comment[]   @relation("CommentReplies")
 }
 
 model Like {
-  id         String       @id @default(uuid())
-  userId     String       @map("user_id")
-  postId     String       @map("post_id")
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id         String      @id @default(uuid())
+  userId     String      @map("user_id")
+  postId     String      @map("post_id")
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
-  user       User      @relation(fields: [userId], references: [id])
-  post       Post      @relation(fields: [postId], references: [id])
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post       Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, postId]) 
+  @@unique([userId, postId])
 }

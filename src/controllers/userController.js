@@ -1,6 +1,6 @@
-import prisma from '../prisma/index.js';
+import prisma from '../../prisma/index.js';
 import { generateUserToken } from '../middleware/authMiddleware.js';
-import { AppError } from '../utils/error.js';   
+import { AppError } from '../utils/error.js';
 import bcrypt from 'bcryptjs';
 
 
@@ -27,24 +27,39 @@ export const createUser = async (req, res, next) => {
   }
 };
 
-export const loginUser = async (req, res, next) => {    
-    const { email, password } = req.body;   
-    if (!email || !password) {  
-    return next(new AppError(400, 'Email and password are required'));      
-    }
-    try {
-    const user = await User.findUnique({
-        where: { email },
-    }); 
+export const loginUser = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new AppError(400, 'Email and password are required'));
+  }
+
+  try {
+    const user = await User.findUnique({ where: { email } });
     if (!user) {
-        return next(new AppError(404, 'User not found'));
+      return next(new AppError(404, 'User not found'));
     }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-        return next(new AppError(401, 'Invalid password'));
-    }       
+      return next(new AppError(401, 'Invalid password'));
+    }
+
     const token = generateUserToken(user);
-    res.status(200).json({ user, token });
+
+    const quote = await getRandomQuote();
+
+    res.status(200).json({
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+      token,
+      quote,
+    });
   } catch (error) {
     next(new AppError(500, 'Failed to login', { error }));
   }
